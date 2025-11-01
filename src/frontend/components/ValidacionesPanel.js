@@ -7,6 +7,7 @@
  * - Indicar coherencia matemática
  * - Alertar sobre errores de cálculo
  * - Proporcionar feedback visual inmediato
+ * - Mostrar avisos sectoriales (horas extra, nocturnidad, festivos)
  */
 
 export class ValidacionesPanel {
@@ -45,7 +46,7 @@ export class ValidacionesPanel {
      * @param {Object} resultados - Resultados del cálculo
      * @param {Object} validacion - Resultado de la validación
      */
-    mostrarValidaciones(resultados, validacion) {
+    mostrarValidaciones(resultados, validacion = null) {
         // Test 1: Base Cotización ≤ Salario Bruto
         this._mostrarTest(
             'baseCotizacion',
@@ -85,6 +86,49 @@ export class ValidacionesPanel {
         // Mostrar resumen general si existe
         if (validacion) {
             this._mostrarResumenValidacion(validacion);
+            this._mostrarAvisosSectoriales(validacion);
+        }
+    }
+
+    /**
+     * Muestra avisos sectoriales si existen
+     * @param {Object} validacion - Resultado de validación completa
+     * @private
+     */
+    _mostrarAvisosSectoriales(validacion) {
+        // Buscar o crear contenedor de avisos sectoriales
+        let avisosSector = document.getElementById('avisos_sectoriales');
+        
+        if (!avisosSector) {
+            avisosSector = document.createElement('div');
+            avisosSector.id = 'avisos_sectoriales';
+            avisosSector.className = 'avisos-sectoriales';
+            
+            const panel = document.querySelector('.validation-panel');
+            if (panel) {
+                panel.appendChild(avisosSector);
+            }
+        }
+
+        // Filtrar solo warnings sectoriales (de SectorValidator)
+        const warningsSectoriales = validacion.warnings.filter(w => 
+            ['TOPE_APLICADO', 'HORAS_EXTRA_ALTAS', 'NOCTURNIDAD_ALTA', 'FESTIVOS_ELEVADOS'].includes(w.codigo)
+        );
+
+        if (warningsSectoriales.length > 0) {
+            let html = '<h4 style="margin-top: var(--space-16); color: var(--color-warning);">⚠️ Avisos Sectoriales</h4>';
+            
+            warningsSectoriales.forEach(warning => {
+                html += `<div class="test-item test-warning">
+                    <span class="test-icon">⚠️</span>
+                    <span class="test-mensaje">${warning.mensaje}</span>
+                </div>`;
+            });
+            
+            avisosSector.innerHTML = html;
+            avisosSector.style.display = 'block';
+        } else {
+            avisosSector.style.display = 'none';
         }
     }
 
@@ -207,108 +251,12 @@ export class ValidacionesPanel {
         if (resumen) {
             resumen.remove();
         }
-    }
-
-    /**
-     * Ejecuta una validación específica y muestra el resultado
-     * @param {string} tipo - Tipo de validación
-     * @param {boolean} resultado - Resultado de la validación
-     * @param {string} mensaje - Mensaje explicativo
-     */
-    mostrarValidacionEspecifica(tipo, resultado, mensaje) {
-        const elemento = this.elementos[tipo];
-        if (!elemento) return;
-
-        elemento.classList.remove('test-success', 'test-error', 'test-warning', 'test-loading');
         
-        if (resultado) {
-            elemento.classList.add('test-success');
-            elemento.innerHTML = `✅ ${mensaje}`;
-        } else {
-            elemento.classList.add('test-error');
-            elemento.innerHTML = `❌ ${mensaje}`;
+        // Limpiar avisos sectoriales si existen
+        const avisos = document.getElementById('avisos_sectoriales');
+        if (avisos) {
+            avisos.remove();
         }
-    }
-
-    /**
-     * Añade una validación personalizada
-     * @param {string} id - ID del elemento
-     * @param {string} nombre - Nombre de la validación
-     * @param {Function} funcion - Función de validación
-     */
-    anadirValidacionPersonalizada(id, nombre, funcion) {
-        // Crear elemento si no existe
-        let elemento = document.getElementById(id);
-        if (!elemento) {
-            elemento = document.createElement('div');
-            elemento.id = id;
-            elemento.className = 'test-item';
-            
-            const panel = document.querySelector('.validation-panel');
-            if (panel) {
-                panel.appendChild(elemento);
-            }
-            
-            this.elementos[id] = elemento;
-        }
-
-        // Ejecutar validación personalizada
-        try {
-            const resultado = funcion();
-            this.mostrarValidacionEspecifica(id, resultado.exito, resultado.mensaje);
-        } catch (error) {
-            this.mostrarValidacionEspecifica(id, false, `Error en ${nombre}: ${error.message}`);
-        }
-    }
-
-    /**
-     * Obtiene el estado actual de todas las validaciones
-     * @returns {Object} Estado de validaciones
-     */
-    obtenerEstado() {
-        const estado = {};
-        
-        Object.entries(this.elementos).forEach(([key, elemento]) => {
-            if (elemento) {
-                const clases = elemento.classList;
-                estado[key] = {
-                    exito: clases.contains('test-success'),
-                    error: clases.contains('test-error'),
-                    warning: clases.contains('test-warning'),
-                    cargando: clases.contains('test-loading'),
-                    mensaje: elemento.textContent
-                };
-            }
-        });
-        
-        return {
-            tests: estado,
-            timestamp: new Date().toISOString(),
-            resumen: this._generarResumenEstado(estado)
-        };
-    }
-
-    /**
-     * Genera resumen del estado actual
-     * @param {Object} estado - Estado de validaciones
-     * @returns {Object} Resumen del estado
-     * @private
-     */
-    _generarResumenEstado(estado) {
-        const tests = Object.values(estado);
-        const exitosos = tests.filter(t => t.exito).length;
-        const errores = tests.filter(t => t.error).length;
-        const warnings = tests.filter(t => t.warning).length;
-        const total = tests.length;
-
-        return {
-            total: total,
-            exitosos: exitosos,
-            errores: errores,
-            warnings: warnings,
-            porcentaje_exito: total > 0 ? (exitosos / total) * 100 : 0,
-            estado_general: errores > 0 ? 'ERROR' : warnings > 0 ? 'WARNING' : 'EXITO'
-        };
     }
 
     /**
