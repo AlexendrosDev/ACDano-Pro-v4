@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ACDaño PRO v4.0</title>
+    <link rel="stylesheet" href="/src/frontend/styles/tokens.css" />
+    <link rel="stylesheet" href="/src/frontend/styles/layout.css" />
+    <link rel="stylesheet" href="/src/frontend/styles/components.css" />
+  </head>
+  <body>
+    <div id="app" class="container mt-24">
+      <header class="card text-center">
+        <h1>🔥 ACDaño PRO v4.0 🔥</h1>
+        <p class="app-subtitle">La turbocomputación de nóminas</p>
+        <p class="app-philosophy">"Con nuestro dinero harás lo que DEBES, no lo que quieres"</p>
+      </header>
+
+      <main class="grid grid-2 mt-24">
+        <section class="card">
+          <h3>Datos del Trabajador</h3>
+          <div id="form_root"></div>
+        </section>
+        <section class="card">
+          <h3>Resultados del Cálculo</h3>
+          <div id="resultados_content"></div>
+        </section>
+      </main>
+
+      <section class="results-section" id="expolio_section">
+        <div class="card text-center">
+          <h3>Medidor de Expolio Fiscal</h3>
+          <div class="expolio-meter">
+            <div id="meter_circle" class="meter-circle"><span id="expolio_percentage">0%</span></div>
+            <p id="expolio_message" style="color: var(--color-text-secondary)">Porcentaje real que se queda el Estado del coste total de tu trabajo</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="results-section" id="validaciones_section">
+        <div class="card">
+          <h3>Validaciones Matemáticas</h3>
+          <div class="validation-panel">
+            <div id="test_base_cotizacion" class="test-item">⏳ Validando coherencia matemática...</div>
+            <div id="test_base_irpf" class="test-item">⏳ Verificando bases de cálculo...</div>
+            <div id="test_salario_liquido" class="test-item">⏳ Comprobando deducciones...</div>
+            <div id="test_atep" class="test-item">⏳ Verificando cumplimiento normativo...</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
