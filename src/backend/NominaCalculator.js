@@ -13,6 +13,7 @@ import BaseCalculator from './calculators/BaseCalculator.js';
 import CotizacionCalculator from './calculators/CotizacionCalculator.js';
 import IRPFCalculator from './calculators/IRPFCalculator.js';
 import LogicValidator from './validators/LogicValidator.js';
+import SectorValidator from './validators/SectorValidator.js';
 
 export class NominaCalculator {
     constructor() {
@@ -27,9 +28,10 @@ export class NominaCalculator {
      * Calcula una nómina completa siguiendo el flujo del pseudocódigo v4.0
      * @param {Object} datosTrabajador - Datos del trabajador
      * @param {Object} datosFamiliares - Datos familiares para IRPF
+     * @param {Object} opcionesSector - Opciones sectoriales (horas extra, nocturnidad, festivos)
      * @returns {Object} Resultados completos y validación
      */
-    calcularNominaCompleta(datosTrabajador, datosFamiliares) {
+    calcularNominaCompleta(datosTrabajador, datosFamiliares, opcionesSector = {}) {
         try {
             // PASO 0: Validar datos de entrada
             const validacionDatos = this.baseCalculator.validarDatosTrabajador(datosTrabajador);
@@ -111,6 +113,13 @@ export class NominaCalculator {
 
             // PASO 10: Validar coherencia matemática
             const validacion = this.logicValidator.validarCoherenciaMatematica(resultados);
+
+            // PASO 11: Añadir validaciones sectoriales
+            const validacionSectorial = SectorValidator.validar(resultados, opcionesSector);
+            
+            // Fusionar warnings sectoriales con validación matemática
+            validacion.warnings = [...validacion.warnings, ...validacionSectorial.warnings];
+            validacion.sectorial = validacionSectorial;
 
             if (!validacion.es_valido) {
                 // Si hay errores críticos, lanzar excepción
