@@ -1,10 +1,15 @@
-/** Carga de datos normativos SS desde JSON */
+/** Carga de datos normativos SS desde JSON + verificación de integridad */
 import ss from '../../data/seguridad_social_2025.json' assert { type: 'json' };
+import DataIntegrityValidator from '../validators/DataIntegrityValidator.js';
 
 export class SeguridadSocial2025 {
   static BASES = ss.bases;
   static TIPOS_TRABAJADOR = ss.tipos_trabajador;
   static TIPOS_EMPRESA = ss.tipos_empresa;
+
+  static async validarIntegridad() {
+    await DataIntegrityValidator.validateJsonIntegrity('seguridad_social_2025.json', ss);
+  }
 
   static aplicarTopes(baseCotizacion) {
     let baseTopada = baseCotizacion;
