@@ -67,6 +67,28 @@ function crearFormularioHTML() {
       <input type="number" id="num_hijos" class="form-control" min="${LIMITES.HIJOS_MIN}" max="${LIMITES.HIJOS_MAX}" value="0" />
     </div>
 
+    <!-- Sección avanzada colapsible -->
+    <details class="form-group">
+      <summary class="form-label" style="cursor: pointer; color: var(--color-primary);">Opciones Avanzadas (Opcional)</summary>
+      <div style="margin-top: var(--space-12); padding: var(--space-12); border: 1px solid var(--color-border); border-radius: var(--radius-base);">
+        <div class="form-group">
+          <label class="form-label" for="horas_extra">Horas Extra Mes (opcional)</label>
+          <input type="number" id="horas_extra" class="form-control" min="0" max="200" value="0" placeholder="0" />
+          <small style="color: var(--color-text-secondary); font-size: var(--font-size-xs);">Para validaciones sectoriales</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="horas_nocturnas">Horas Nocturnas Mes (opcional)</label>
+          <input type="number" id="horas_nocturnas" class="form-control" min="0" max="200" value="0" placeholder="0" />
+          <small style="color: var(--color-text-secondary); font-size: var(--font-size-xs);">22:00 - 06:00</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="festivos_trabajados">Festivos Trabajados Mes (opcional)</label>
+          <input type="number" id="festivos_trabajados" class="form-control" min="0" max="10" value="0" placeholder="0" />
+          <small style="color: var(--color-text-secondary); font-size: var(--font-size-xs);">Domingos y festivos oficiales</small>
+        </div>
+      </div>
+    </details>
+
     <button id="calcular_btn" class="btn btn-primary btn-full-width">🚀 Calcular Nómina</button>
   `;
 }
@@ -85,8 +107,11 @@ class App {
     const formRoot = document.getElementById('form_root');
     formRoot.innerHTML = crearFormularioHTML();
 
-    // Re-inicializar referencias del formulario
-    this.formulario = new FormularioTrabajador();
+    // Re-inicializar referencias del formulario (incluir nuevos campos)
+    this.formulario.elementos.horasExtra = document.getElementById('horas_extra');
+    this.formulario.elementos.horasNocturnas = document.getElementById('horas_nocturnas');
+    this.formulario.elementos.festivosTrabajados = document.getElementById('festivos_trabajados');
+    
     this.resultados.inicializar?.();
     this.validaciones.inicializar?.();
     this.meter.inicializar?.();
@@ -102,9 +127,11 @@ class App {
     try {
       const datosTrabajador = this.formulario.recogerDatosTrabajador();
       const datosFamiliares = this.formulario.recogerDatosFamiliares();
+      const opcionesSector = this.recogerOpcionesSector();
+      
       if (!datosTrabajador) return;
 
-      const { resultados, validacion } = this.nominaCalculator.calcularNominaCompleta(datosTrabajador, datosFamiliares);
+      const { resultados, validacion } = this.nominaCalculator.calcularNominaCompleta(datosTrabajador, datosFamiliares, opcionesSector);
 
       this.resultados.mostrarResultados(resultados, validacion);
       this.validaciones.mostrarValidaciones(resultados, validacion);
@@ -117,6 +144,14 @@ class App {
       document.getElementById('expolio_section').classList.remove('visible');
       document.getElementById('validaciones_section').classList.remove('visible');
     }
+  }
+
+  recogerOpcionesSector() {
+    return {
+      horasExtra: parseInt(document.getElementById('horas_extra')?.value) || 0,
+      horasNocturnas: parseInt(document.getElementById('horas_nocturnas')?.value) || 0,
+      festivosTrabajados: parseInt(document.getElementById('festivos_trabajados')?.value) || 0
+    };
   }
 }
 
