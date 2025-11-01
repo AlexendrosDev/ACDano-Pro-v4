@@ -1,10 +1,15 @@
-/** Carga IRPF Valencia 2025 desde JSON */
+/** Carga IRPF Valencia 2025 desde JSON + verificación de integridad */
 import irpf from '../../data/irpf_valencia_2025.json' assert { type: 'json' };
+import DataIntegrityValidator from '../validators/DataIntegrityValidator.js';
 
 export class IRPFValencia2025 {
   static TRAMOS_ESTATALES = irpf.tramos_estatales;
   static TRAMOS_AUTONOMICOS_VALENCIA = irpf.tramos_autonomicos_valencia;
   static MINIMOS = irpf.minimos;
+
+  static async validarIntegridad() {
+    await DataIntegrityValidator.validateJsonIntegrity('irpf_valencia_2025.json', irpf);
+  }
 
   static calcularMinimoFamiliar(numHijos) {
     let minimo = 0;
