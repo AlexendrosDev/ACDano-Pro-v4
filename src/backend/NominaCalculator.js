@@ -5,6 +5,9 @@ import LogicValidator from './validators/LogicValidator.js';
 import SectorValidator from './validators/SectorValidator.js';
 import CalculationAuditor from './validators/CalculationAuditor.js';
 import AuditLogger from '../shared/AuditLogger.js';
+import ConvenioValencia from './models/ConvenioValencia.js';
+import SeguridadSocial2025 from './models/SeguridadSocial2025.js';
+import IRPFValencia2025 from './models/IRPFValencia2025.js';
 
 export class NominaCalculator {
   constructor() {
@@ -12,13 +15,24 @@ export class NominaCalculator {
     this.cotizacionCalculator = new CotizacionCalculator();
     this.irpfCalculator = new IRPFCalculator();
     this.logicValidator = new LogicValidator();
+    this._integridadVerificada = false;
   }
 
-  calcularNominaCompleta(datosTrabajador, datosFamiliares, opcionesSector = {}) {
-    // Log entrada
+  async _asegurarIntegridadNormativa() {
+    if (this._integridadVerificada) return;
+    await Promise.all([
+      ConvenioValencia.validarIntegridad?.(),
+      SeguridadSocial2025.validarIntegridad?.(),
+      IRPFValencia2025.validarIntegridad?.()
+    ]);
+    this._integridadVerificada = true;
+  }
+
+  async calcularNominaCompleta(datosTrabajador, datosFamiliares, opcionesSector = {}) {
+    await this._asegurarIntegridadNormativa();
+
     AuditLogger.log('calculo:start', { datosTrabajador, datosFamiliares });
 
-    // Flujo principal
     const conceptosSalariales = this.baseCalculator.calcularConceptosSalariales(datosTrabajador);
     const conceptosNoSalariales = this.baseCalculator.calcularConceptosNoSalariales(datosTrabajador);
     const salarioBrutoTotal = this.baseCalculator.calcularSalarioBrutoTotal(conceptosSalariales, conceptosNoSalariales);
@@ -53,26 +67,21 @@ export class NominaCalculator {
       datos_familiares: datosFamiliares,
     };
 
-    // Validaciones
     const validacion = this.logicValidator.validarCoherenciaMatematica(resultados);
     const valSector = SectorValidator.validar(resultados, opcionesSector);
     validacion.warnings = [...validacion.warnings, ...valSector.warnings];
     validacion.sectorial = valSector;
 
-    // Auditoría de cálculos críticos (double-check)
     const auditoria = CalculationAuditor.audit(resultados);
     if (auditoria.warnings.length) {
       validacion.warnings = [...validacion.warnings, ...auditoria.warnings];
     }
 
-    // Log salida
     AuditLogger.log('calculo:end', { resultados, validacion, auditoria });
 
     if (!validacion.es_valido) {
       const crit = validacion.errores.find(e => e.tipo === 'CRÍTICO');
-      if (crit) {
-        throw new Error(crit.mensaje);
-      }
+      if (crit) throw new Error(crit.mensaje);
     }
 
     return { resultados, validacion };
