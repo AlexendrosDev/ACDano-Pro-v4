@@ -1,0 +1,21 @@
+{
+  "version": "2025.1",
+  "bases": {
+    "BASE_MINIMA_GRUPO_5_7": 1381.20,
+    "BASE_MAXIMA": 4909.50
+  },
+  "tipos_trabajador": {
+    "CC": 4.70,
+    "DESEMPLEO": 1.55,
+    "FP": 0.10,
+    "MEI": 0.13
+  },
+  "tipos_empresa": {
+    "CC": 23.60,
+    "ATEP": 1.25,
+    "DESEMPLEO": 5.50,
+    "FOGASA": 0.20,
+    "FP": 0.60,
+    "MEI": 0.67
+  }
+}

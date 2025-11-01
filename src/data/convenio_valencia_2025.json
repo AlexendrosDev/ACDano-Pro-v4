@@ -1,0 +1,39 @@
+{
+  "version": "2025.1",
+  "tablas": {
+    "TABLA_I": {
+      "NIVEL_I": { "salario": 1337.87, "hora_extra": 15.70, "festivo": 116.16 },
+      "NIVEL_II": { "salario": 1288.69, "hora_extra": 15.15, "festivo": 111.90 },
+      "NIVEL_III": { "salario": 1214.84, "hora_extra": 14.21, "festivo": 105.27 },
+      "NIVEL_IV": { "salario": 1165.60, "hora_extra": 13.69, "festivo": 101.16 },
+      "NIVEL_V": { "salario": 1100.46, "hora_extra": 12.91, "festivo": 95.40 }
+    },
+    "TABLA_II": {
+      "NIVEL_I": { "salario": 1415.47, "hora_extra": 16.77, "festivo": 124.08 },
+      "NIVEL_II": { "salario": 1363.05, "hora_extra": 16.15, "festivo": 119.49 },
+      "NIVEL_III": { "salario": 1284.43, "hora_extra": 15.20, "festivo": 112.47 },
+      "NIVEL_IV": { "salario": 1231.95, "hora_extra": 14.64, "festivo": 108.05 },
+      "NIVEL_V": { "salario": 1162.48, "hora_extra": 13.78, "festivo": 101.88 }
+    }
+  },
+  "complementos": {
+    "PLUS_FORMACION": 20.00,
+    "ANEXO_IV_1": {
+      "plus_transporte_partida": 66.96,
+      "plus_transporte_continuada": 46.80,
+      "manutencion": 41.32,
+      "utiles_herramientas": 8.59
+    },
+    "ANEXO_IV_2": {
+      "plus_transporte_partida": 55.81,
+      "plus_transporte_continuada": 36.01,
+      "manutencion": 44.13,
+      "utiles_herramientas": 9.18
+    },
+    "VESTUARIO": {
+      "cocineros": { "total": 17.31 },
+      "camareros": { "total": 29.65 }
+    }
+  },
+  "num_pagas_extra": 3
+}

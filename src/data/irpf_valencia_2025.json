@@ -1,0 +1,27 @@
+{
+  "version": "2025.1",
+  "tramos_estatales": [
+    { "hasta": 12450, "tipo": 19.0 },
+    { "hasta": 20200, "tipo": 24.0 },
+    { "hasta": 35200, "tipo": 30.0 },
+    { "hasta": 60000, "tipo": 37.0 },
+    { "hasta": 300000, "tipo": 45.0 },
+    { "infinito": true, "tipo": 47.0 }
+  ],
+  "tramos_autonomicos_valencia": [
+    { "hasta": 12450, "tipo": 0.5 },
+    { "hasta": 20200, "tipo": 0.5 },
+    { "hasta": 35200, "tipo": 0.5 },
+    { "hasta": 60000, "tipo": 1.0 },
+    { "hasta": 300000, "tipo": 1.5 },
+    { "infinito": true, "tipo": 2.0 }
+  ],
+  "minimos": {
+    "PERSONAL_SOLTERO": 5550.00,
+    "GASTOS_DEDUCIBLES": 2000.00,
+    "PRIMER_HIJO": 2400.00,
+    "SEGUNDO_HIJO": 2700.00,
+    "TERCER_HIJO": 4000.00,
+    "CUARTO_Y_SIGUIENTES": 4500.00
+  }
+}
