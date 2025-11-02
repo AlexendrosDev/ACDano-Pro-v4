@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACDäo PRO v4.0</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>🔥 ACDäo PRO v4.0 🔥</h1>
+            <div class="app-subtitle">La turbocomputación de nóminas</div>
+            <div class="app-philosophy">
+                "Con nuestro dinero harás lo que DEBES, no lo que quieres"<br>
+                📈 Transparencia absoluta del expolio fiscal español
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-2">
+            <!-- Formulario de datos -->
+            <div class="card">
+                <h3>Datos del Trabajador</h3>
+                
+                <div class="form-group">
+                    <label class="form-label" for="categoria">Categoría Profesional</label>
+                    <select id="categoria" class="form-control">
+                        <option value="">Seleccionar categoría...</option>
+                        
+                        <!-- NIVEL I -->
+                        <optgroup label="NIVEL I (1.337,87€ - 1.415,47€)">
+                            <option value="jefe_cocina_I">Jefe de Cocina</option>
+                            <option value="maitre_I">Maître</option>
+                            <option value="jefe_recepcion_I">Jefe de Recepción</option>
+                        </optgroup>
+                        
+                        <!-- NIVEL II -->
+                        <optgroup label="NIVEL II (1.288,69€ - 1.363,05€)">
+                            <option value="segundo_cocina_II">Segundo de Cocina</option>
+                            <option value="jefe_comedor_II">Jefe de Comedor</option>
+                            <option value="recepcionista_II">Recepcionista</option>
+                        </optgroup>
+                        
+                        <!-- NIVEL III -->
+                        <optgroup label="NIVEL III (1.214,84€ - 1.284,43€)">
+                            <option value="cocinero_III">Cocinero</option>
+                            <option value="camarero_III">Camarero</option>
+                            <option value="barman_III">Barman</option>
+                        </optgroup>
+                        
+                        <!-- NIVEL IV -->
+                        <optgroup label="NIVEL IV (1.165,60€ - 1.231,95€)">
+                            <option value="ayudante_cocina_IV">Ayudante de Cocina</option>
+                            <option value="ayudante_camarero_IV">Ayudante de Camarero</option>
+                            <option value="lavavajillas_IV">Lavavajillas</option>
+                        </optgroup>
+                        
+                        <!-- NIVEL V -->
+                        <optgroup label="NIVEL V (1.100,46€ - 1.162,48€)">
+                            <option value="pinche_cocina_V">Pinche de Cocina</option>
+                            <option value="limpieza_V">Personal de Limpieza</option>
+                            <option value="auxiliar_V">Auxiliar</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="tipo_establecimiento">Tipo de Establecimiento</label>
+                    <select id="tipo_establecimiento" class="form-control">
+                        <option value="restaurante">Restaurante/Bar/Cafetería (Tabla I)</option>
+                        <option value="hotel">Hotel 4*/5* (Tabla II)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="tipo_jornada">Tipo de Jornada</label>
+                    <select id="tipo_jornada" class="form-control">
+                        <option value="continuada">Jornada Continuada</option>
+                        <option value="partida">Jornada Partida</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Complementos Aplicables</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="plus_formacion">
+                            <label for="plus_formacion">Plus Formación (20€)</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="plus_transporte">
+                            <label for="plus_transporte">Plus Transporte</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="manutencion">
+                            <label for="manutencion">Manutención</label>
+                        </div>
+                        <div class="checkbox-item" style="flex-basis: 100%;">
+                            <details style="width: 100%;">
+                                <summary style="cursor: pointer; font-weight: var(--font-weight-medium); padding: var(--space-8); background: var(--color-secondary); border-radius: var(--radius-sm); margin-bottom: var(--space-8);">
+                                    👕 Uniforme no proporcionado por empresa
+                                </summary>
+                                <div style="padding: var(--space-8); background: var(--color-surface); border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-8); margin-bottom: var(--space-8);">
+                                        
+                                        <!-- Cocina -->
+                                        <div>
+                                            <strong style="color: var(--color-primary); font-size: var(--font-size-sm);">👨‍🍳 Cocina:</strong>
+                                            <div style="margin-top: var(--space-4);">
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="chaquetilla_cocina" style="width: 18px; height: 18px;">
+                                                    Chaquetilla (4,23€)
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="gorro_cocina" style="width: 18px; height: 18px;">
+                                                    Gorro (1,14€)
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="pantalon_cocina" style="width: 18px; height: 18px;">
+                                                    Pantalon (5,10€)
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="zapatos_cocina" style="width: 18px; height: 18px;">
+                                                    Zapatos (6,84€)
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sala -->
+                                        <div>
+                                            <strong style="color: var(--color-primary); font-size: var(--font-size-sm);">🍽️ Sala:</strong>
+                                            <div style="margin-top: var(--space-4);">
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="chaqueta_camarero" style="width: 18px; height: 18px;">
+                                                    Chaqueta (9,62€)
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="pantalon_camarero" style="width: 18px; height: 18px;">
+                                                    Pantalon (7,37€)
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="camisa_camarero" style="width: 18px; height: 18px;">
+                                                    Camisa (5,10€)
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="corbata" style="width: 18px; height: 18px;">
+                                                    Corbata (0,72€)
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="zapatos_camarero" style="width: 18px; height: 18px;">
+                                                    Zapatos (6,84€)
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- General -->
+                                        <div>
+                                            <strong style="color: var(--color-primary); font-size: var(--font-size-sm);">👕 General:</strong>
+                                            <div style="margin-top: var(--space-4);">
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="delantal" style="width: 18px; height: 18px;">
+                                                    Delantal (3,50€)
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="mandil" style="width: 18px; height: 18px;">
+                                                    Mandil (2,80€)
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--font-size-sm);">
+                                                    <input type="checkbox" id="gorra_servicio" style="width: 18px; height: 18px;">
+                                                    Gorra (1,95€)
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style="font-size: var(--font-size-xs); color: var(--color-text-secondary); font-style: italic;">
+                                        ℹ️ Selecciona los elementos de uniforme que utilizas para trabajar y no te han sido proporcionados por la empresa
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="num_hijos">Número de Hijos (para IRPF)</label>
+                    <input type="number" id="num_hijos" class="form-control" min="0" max="10" value="0">
+                </div>
+
+                <button id="calcular_btn" class="btn btn-primary btn-full-width">
+                    🚀 Calcular Nómina
+                </button>
+            </div>
+
+            <!-- Resultados -->
+            <div class="card">
+                <h3>Resultados del Cálculo</h3>
+                <div id="resultados_content">
+                    <p class="text-center" style="color: var(--color-text-secondary); font-style: italic;">
+                        Completa los datos y presiona "Calcular Nómina" para ver los resultados
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medidor de Expolio -->
+        <div class="results-section" id="expolio_section">
+            <div class="card">
+                <h3 class="text-center">Medidor de Expolio Fiscal</h3>
+                <div class="expolio-meter">
+                    <div id="meter_circle" class="meter-circle">
+                        <span id="expolio_percentage">0%</span>
+                    </div>
+                    <p id="expolio_message" style="color: var(--color-text-secondary);">
+                        Porcentaje real que se queda el Estado del coste total de tu trabajo
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Validaciones -->
+        <div class="results-section" id="validaciones_section">
+            <div class="card">
+                <h3>Validaciones Matemáticas</h3>
+                <div class="validation-panel">
+                    <div id="test_base_cotizacion" class="test-item">
+                        ⏳ Validando coherencia matemática...
+                    </div>
+                    <div id="test_base_irpf" class="test-item">
+                        ⏳ Verificando bases de cálculo...
+                    </div>
+                    <div id="test_salario_liquido" class="test-item">
+                        ⏳ Comprobando deducciones...
+                    </div>
+                    <div id="test_atep" class="test-item">
+                        ⏳ Verificando cumplimiento normativo...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../main.js"></script>
+</body>
+</html>
