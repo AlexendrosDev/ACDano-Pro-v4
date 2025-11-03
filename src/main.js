@@ -4,9 +4,29 @@ import ResultadosNomina from './frontend/components/ResultadosNomina.js';
 import ValidacionesPanel from './frontend/components/ValidacionesPanel.js';
 import ExpolioMeter from './frontend/components/ExpolioMeter.js';
 import { LIMITES } from './shared/constants.js';
+import SectorManager from './core/SectorManager.js';
+import registerHosteleria from './sectors/hosteleria/HosteleriaPlugin.js';
+
+// Registrar sector Hostelería (Valencia) como plugin inicial
+registerHosteleria();
+
+function crearSelectorSector() {
+  const sectores = SectorManager.listSectors();
+  const options = sectores.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  return `
+    <div class="form-group">
+      <label class="form-label" for="sector">Sector</label>
+      <select id="sector" class="form-control">
+        ${options}
+      </select>
+    </div>
+  `;
+}
 
 function crearFormularioHTML() {
   return `
+    ${crearSelectorSector()}
+
     <div class="form-group">
       <label class="form-label" for="categoria">Categoría Profesional</label>
       <select id="categoria" class="form-control">
@@ -67,7 +87,6 @@ function crearFormularioHTML() {
       <input type="number" id="num_hijos" class="form-control" min="${LIMITES.HIJOS_MIN}" max="${LIMITES.HIJOS_MAX}" value="0" />
     </div>
 
-    <!-- Sección avanzada colapsible -->
     <details class="form-group">
       <summary class="form-label" style="cursor: pointer; color: var(--color-primary);">Opciones Avanzadas (Opcional)</summary>
       <div style="margin-top: var(--space-12); padding: var(--space-12); border: 1px solid var(--color-border); border-radius: var(--radius-base);">
@@ -103,24 +122,35 @@ class App {
   }
 
   init() {
-    // Montar el formulario
     const formRoot = document.getElementById('form_root');
     formRoot.innerHTML = crearFormularioHTML();
 
-    // Re-inicializar referencias del formulario (incluir nuevos campos)
     this.formulario.elementos.horasExtra = document.getElementById('horas_extra');
     this.formulario.elementos.horasNocturnas = document.getElementById('horas_nocturnas');
     this.formulario.elementos.festivosTrabajados = document.getElementById('festivos_trabajados');
+
+    // Actualizar categorías al cambiar de sector (simple: Hostelería por ahora)
+    const sectorSelect = document.getElementById('sector');
+    sectorSelect.addEventListener('change', () => this._cargarCategoriasParaSector(sectorSelect.value));
+    this._cargarCategoriasParaSector(sectorSelect.value);
     
     this.resultados.inicializar?.();
     this.validaciones.inicializar?.();
     this.meter.inicializar?.();
 
-    // Eventos
     document.getElementById('calcular_btn').addEventListener('click', () => this.calcular());
     Object.values(this.formulario.elementos).forEach(el => el && el.addEventListener('change', () => {
       if (this.formulario.elementos.categoria.value) this.calcular();
     }));
+  }
+
+  _cargarCategoriasParaSector(sectorId) {
+    const sector = SectorManager.getSector(sectorId);
+    const sel = document.getElementById('categoria');
+    if (!sector || !sel) return;
+
+    sel.innerHTML = '<option value="">Seleccionar categoría...</option>' +
+      sector.categories.map(c => `<option value="${c}">${c.replaceAll('_',' ').toUpperCase()}</option>`).join('');
   }
 
   calcular() {
