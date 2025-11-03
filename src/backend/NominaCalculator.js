@@ -11,6 +11,9 @@ import ConvenioValencia from './models/ConvenioValencia.js';
 import SeguridadSocial2025 from './models/SeguridadSocial2025.js';
 import IRPFValencia2025 from './models/IRPFValencia2025.js';
 import { round2 } from '../shared/utils.js';
+import RateLimiter from '../shared/RateLimiter.js';
+import SecurityValidator from '../shared/SecurityValidator.js';
+import SchemaValidator from './validators/SchemaValidator.js';
 
 const STRICT_MODE = false; // Cambiar a true en entornos de producción estrictos
 
@@ -33,19 +36,54 @@ export class NominaCalculator {
     this._integridadVerificada = true;
   }
 
+  _sanitizarEntradas(datosTrabajador, datosFamiliares) {
+    // Sanitizar selects y strings básicos
+    const cat = SecurityValidator.sanitizeInput(datosTrabajador?.categoria, { type: 'select', field: 'categoria' });
+    const tabla = SecurityValidator.sanitizeInput(datosTrabajador?.tabla, { type: 'select', field: 'tabla' });
+    const jornada = SecurityValidator.sanitizeInput(datosTrabajador?.tipo_jornada, { type: 'select', field: 'tipo_jornada' });
+    const nivel = SecurityValidator.sanitizeInput(datosTrabajador?.nivel, { type: 'text' });
+
+    const hijos = SecurityValidator.sanitizeInput(datosFamiliares?.num_hijos, { type: 'number', min: 0, max: 10 });
+
+    const elementos_uniforme = Array.isArray(datosTrabajador?.elementos_uniforme)
+      ? datosTrabajador.elementos_uniforme.map(e => SecurityValidator.sanitizeInput(e, { type: 'text' })).slice(0, 30)
+      : [];
+
+    return [{
+      ...datosTrabajador,
+      categoria: cat,
+      tabla: tabla,
+      tipo_jornada: jornada,
+      nivel: nivel,
+      elementos_uniforme
+    }, { num_hijos: hijos }];
+  }
+
   async calcularNominaCompleta(datosTrabajador, datosFamiliares, opcionesSector = {}) {
+    // Rate limiting
+    RateLimiter.checkLimit();
+
+    // Sanitización
+    const [dtSan, dfSan] = this._sanitizarEntradas(datosTrabajador, datosFamiliares);
+
+    // Validación de esquemas
+    const v1 = SchemaValidator.validate('datosTrabajador', dtSan);
+    if (!v1.valid) throw new Error(`Datos inválidos: ${v1.errors.join('; ')}`);
+    const v2 = SchemaValidator.validate('datosFamiliares', dfSan);
+    if (!v2.valid) throw new Error(`Datos familiares inválidos: ${v2.errors.join('; ')}`);
+
     await this._asegurarIntegridadNormativa();
 
-    AuditLogger.log('calculo:start', { datosTrabajador, datosFamiliares });
+    AuditLogger.log('calculo:start', { datosTrabajador: dtSan, datosFamiliares: dfSan });
 
-    const conceptosSalariales = this.baseCalculator.calcularConceptosSalariales(datosTrabajador);
-    const conceptosNoSalariales = this.baseCalculator.calcularConceptosNoSalariales(datosTrabajador);
+    const conceptosSalariales = this.baseCalculator.calcularConceptosSalariales(dtSan);
+    const conceptosNoSalariales = this.baseCalculator.calcularConceptosNoSalariales(dtSan);
     const salarioBrutoTotal = this.baseCalculator.calcularSalarioBrutoTotal(conceptosSalariales, conceptosNoSalariales);
     const baseCotizacion = this.baseCalculator.calcularBaseCotizacion(conceptosSalariales);
     const baseIRPFAnual = this.baseCalculator.calcularBaseIRPF(salarioBrutoTotal);
     const cotizacionesTrabajador = this.cotizacionCalculator.calcularCotizacionesTrabajador(baseCotizacion);
     const cotizacionesEmpresa = this.cotizacionCalculator.calcularCotizacionesEmpresa(baseCotizacion);
-    const irpf = this.irpfCalculator.calcularIRPFValenciaCompleto(baseIRPFAnual, datosFamiliares);
+    const irpf = this.irpfCalculator.calcularIRPFValenciaCompleto(baseIRPFAnual, dfSan);
 
     const totalDeducciones = cotizacionesTrabajador.total + irpf.retencion_mensual;
     const salarioLiquido = salarioBrutoTotal - totalDeducciones;
@@ -126,8 +164,8 @@ export class NominaCalculator {
       expolio_total: expolioTotal,
       porcentaje_expolio: porcentajeExpolio,
       fecha_calculo: new Date().toISOString(),
-      datos_trabajador: datosTrabajador,
-      datos_familiares: datosFamiliares,
+      datos_trabajador: dtSan,
+      datos_familiares: dfSan,
     };
 
     // Validación matemática
@@ -149,7 +187,7 @@ export class NominaCalculator {
     }
 
     // Auditoría IRPF por tramos (independiente)
-    const auditIRPF = IRPFTramosAuditor.auditar(baseIRPFAnual, datosFamiliares);
+    const auditIRPF = IRPFTramosAuditor.auditar(baseIRPFAnual, dfSan);
     const difCuota = Math.abs((auditIRPF.cuotas.total || 0) - (irpf.cuota_anual || 0));
     const difMensual = Math.abs((auditIRPF.retencionMensual || 0) - (irpf.retencion_mensual || 0));
     if (difCuota > 0.02 || difMensual > 0.02) {
