@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "num_pagas_extra": 2,
+  "tablas": {
+    "TABLA_I": {
+      "NIVEL_I": { "salario": 1450.80, "descripcion": "Encargado/Supervisor" },
+      "NIVEL_II": { "salario": 1320.60, "descripcion": "Especialista" },
+      "NIVEL_III": { "salario": 1215.50, "descripcion": "Limpiador con experiencia" },
+      "NIVEL_IV": { "salario": 1145.30, "descripcion": "Limpiador" },
+      "NIVEL_V": { "salario": 1084.50, "descripcion": "Peón" }
+    }
+  },
+  "complementos": {
+    "PLUS_FORMACION": 25.00,
+    "PLUS_NOCTURNIDAD": 95.50,
+    "PLUS_PENOSIDAD": 87.30,
+    "PLUS_TRANSPORTE": {
+      "URBANO": 45.80,
+      "INTERURBANO": 78.60
+    },
+    "MANUTENCION": 35.20,
+    "EPI": {
+      "ELEMENTOS": {
+        "guantes_latex": { "precio": 3.45 },
+        "mascarilla_ffp2": { "precio": 2.80 },
+        "bata_proteccion": { "precio": 8.95 },
+        "calzado_seguridad": { "precio": 15.60 },
+        "gafas_proteccion": { "precio": 4.20 },
+        "delantal_impermeable": { "precio": 6.75 }
+      }
+    }
+  },
+  "checksums": {
+    "sha256": "d5f8e3a2b1c0987654321fedcba0123456789abcdef"
+  }
+}
