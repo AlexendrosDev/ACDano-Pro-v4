@@ -1,9 +1,9 @@
 /**
  * IRPFCalculator.js
- * Calculador especializado para IRPF Valencia (estatal + autonómico)
+ * Calculador especializado para IRPF (estatal + autonómico)
  * 
  * Responsabilidades:
- * - Cálculo IRPF por tramos (estatal + Valencia)
+ * - Cálculo IRPF por tramos (estatal + regional)
  * - Aplicación de mínimos personales y familiares
  * - Cálculo de retención mensual y tipo medio
  */
@@ -18,11 +18,22 @@ export class IRPFCalculator {
      * @returns {Object} Cálculo IRPF completo
      */
     calcularIRPFValenciaCompleto(baseIRPFAnual, datosFamiliares) {
+        return this.calcularIRPFRegional(baseIRPFAnual, datosFamiliares, IRPFValencia2025);
+    }
+
+    /**
+     * Calcula el IRPF de cualquier región (estatal + autonómico)
+     * @param {number} baseIRPFAnual - Base IRPF anual en euros
+     * @param {Object} datosFamiliares - Datos familiares
+     * @param {Object} IRPFRegionModel - Modelo IRPF de la región
+     * @returns {Object} Cálculo IRPF completo
+     */
+    calcularIRPFRegional(baseIRPFAnual, datosFamiliares, IRPFRegionModel) {
         // PASO 1: Calcular deducciones del IRPF
         const cotizacionSSAnual = baseIRPFAnual * 0.0648; // 6,48% anual
-        const gastosDeducibles = IRPFValencia2025.MINIMOS.GASTOS_DEDUCIBLES;
-        const minimoPersonal = IRPFValencia2025.MINIMOS.PERSONAL_SOLTERO;
-        const minimoFamiliar = IRPFValencia2025.calcularMinimoFamiliar(datosFamiliares.num_hijos);
+        const gastosDeducibles = IRPFRegionModel.MINIMOS?.GASTOS_DEDUCIBLES || IRPFValencia2025.MINIMOS.GASTOS_DEDUCIBLES;
+        const minimoPersonal = IRPFRegionModel.MINIMOS?.PERSONAL_SOLTERO || IRPFValencia2025.MINIMOS.PERSONAL_SOLTERO;
+        const minimoFamiliar = IRPFRegionModel.calcularMinimoFamiliar?.(datosFamiliares.num_hijos) || IRPFValencia2025.calcularMinimoFamiliar(datosFamiliares.num_hijos);
 
         // PASO 2: Calcular base liquidable
         const baseLiquidable = baseIRPFAnual - cotizacionSSAnual - gastosDeducibles - minimoPersonal - minimoFamiliar;
@@ -45,8 +56,11 @@ export class IRPFCalculator {
         }
 
         // PASO 4: Calcular cuota por tramos (estatal + autonómico)
-        const cuotaEstatal = this.calcularPorTramos(baseLiquidable, IRPFValencia2025.TRAMOS_ESTATALES);
-        const cuotaAutonomica = this.calcularPorTramos(baseLiquidable, IRPFValencia2025.TRAMOS_AUTONOMICOS_VALENCIA);
+        const tramosEstatales = IRPFRegionModel.TRAMOS_ESTATALES || IRPFValencia2025.TRAMOS_ESTATALES;
+        const tramosAutonomicos = IRPFRegionModel.TRAMOS_AUTONOMICOS || IRPFRegionModel.TRAMOS_AUTONOMICOS_VALENCIA || IRPFValencia2025.TRAMOS_AUTONOMICOS_VALENCIA;
+        
+        const cuotaEstatal = this.calcularPorTramos(baseLiquidable, tramosEstatales);
+        const cuotaAutonomica = this.calcularPorTramos(baseLiquidable, tramosAutonomicos);
 
         // PASO 5: Calcular totales
         const cuotaTotal = cuotaEstatal + cuotaAutonomica;
@@ -107,23 +121,11 @@ export class IRPFCalculator {
         return cuota;
     }
 
-    /**
-     * Calcula el IRPF simplificado (solo para estimaciones rápidas)
-     * @param {number} baseIRPFAnual - Base IRPF anual
-     * @param {number} numHijos - Número de hijos
-     * @returns {Object} Cálculo simplificado
-     */
     calcularIRPFSimplificado(baseIRPFAnual, numHijos = 0) {
         const datosFamiliares = { num_hijos: numHijos };
         return this.calcularIRPFValenciaCompleto(baseIRPFAnual, datosFamiliares);
     }
 
-    /**
-     * Estima el tipo marginal para una base dada
-     * @param {number} baseIRPFAnual - Base IRPF anual
-     * @param {number} numHijos - Número de hijos
-     * @returns {number} Tipo marginal estimado (%)
-     */
     estimarTipoMarginal(baseIRPFAnual, numHijos = 0) {
         const calculo = this.calcularIRPFSimplificado(baseIRPFAnual, numHijos);
         
@@ -131,20 +133,13 @@ export class IRPFCalculator {
             return 0;
         }
         
-        // Tipo marginal = tipo estatal + tipo autonómico del último tramo aplicable
         return IRPFValencia2025.getTipoMarginalTotal(calculo.base_liquidable);
     }
 
-    /**
-     * Valida el cálculo de IRPF
-     * @param {Object} calculoIRPF - Resultado del cálculo IRPF
-     * @returns {Object} Validación del cálculo
-     */
     validarCalculoIRPF(calculoIRPF) {
         const errores = [];
         const warnings = [];
 
-        // Validar coherencia matemática
         if (calculoIRPF.cuota_anual < 0) {
             errores.push({
                 tipo: "ERROR",
@@ -161,7 +156,6 @@ export class IRPFCalculator {
             });
         }
 
-        // Warnings por tipos muy altos
         if (calculoIRPF.tipo_medio > 30) {
             warnings.push({
                 tipo: "WARNING",
@@ -171,7 +165,6 @@ export class IRPFCalculator {
             });
         }
 
-        // Warning si la retención es muy alta respecto al salario
         const porcentajeRetencion = (calculoIRPF.retencion_mensual * 12 / calculoIRPF.base_irpf_anual) * 100;
         if (porcentajeRetencion > 25) {
             warnings.push({
@@ -188,18 +181,10 @@ export class IRPFCalculator {
         };
     }
 
-    /**
-     * Obtiene un desglose detallado del cálculo IRPF
-     * @param {Object} calculoIRPF - Resultado del cálculo IRPF
-     * @returns {Object} Desglose detallado
-     */
     obtenerDesglose(calculoIRPF) {
         return {
-            // Bases
             base_irpf_anual: calculoIRPF.base_irpf_anual,
             base_irpf_mensual: calculoIRPF.base_irpf_anual / 12,
-            
-            // Deducciones
             deducciones: {
                 cotizacion_ss: calculoIRPF.cotizacion_ss_anual,
                 gastos_deducibles: calculoIRPF.gastos_deducibles,
@@ -208,18 +193,12 @@ export class IRPFCalculator {
                 total: calculoIRPF.cotizacion_ss_anual + calculoIRPF.gastos_deducibles + 
                        calculoIRPF.minimo_personal + calculoIRPF.minimo_familiar
             },
-            
-            // Base liquidable
             base_liquidable: calculoIRPF.base_liquidable,
-            
-            // Cuotas
             cuotas: {
                 estatal: calculoIRPF.cuota_estatal,
                 autonomica: calculoIRPF.cuota_autonomica,
                 total: calculoIRPF.cuota_anual
             },
-            
-            // Retención y tipos
             resultado: {
                 retencion_mensual: calculoIRPF.retencion_mensual,
                 tipo_medio: calculoIRPF.tipo_medio,
