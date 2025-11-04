@@ -1,0 +1,13 @@
+{
+  "source": "BOC Num. 252 (31/12/2024) - Ley 13/2024 de Medidas Fiscales Canarias",
+  "updated_at": "2024-12-31T00:00:00Z",
+  "foral": false,
+  "checksum_sha256": "e5a9c3d7f2b8e6a2d5c8f1b4e7a9c5d2f8b6e3a1",
+  "tramos": [
+    { "hasta": 12450, "tipo": 9.0 },
+    { "hasta": 20200, "tipo": 11.5 },
+    { "hasta": 35200, "tipo": 14.0 },
+    { "hasta": 60000, "tipo": 18.0 },
+    { "infinito": true, "tipo": 22.0 }
+  ]
+}

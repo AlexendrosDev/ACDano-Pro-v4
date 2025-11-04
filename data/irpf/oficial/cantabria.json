@@ -1,0 +1,13 @@
+{
+  "source": "BOC Num. 251 (31/12/2024) - Ley 6/2024 de Medidas Fiscales Cantabria",
+  "updated_at": "2024-12-31T00:00:00Z",
+  "foral": false,
+  "checksum_sha256": "c3e7b1a5d8f4c6e9b2a4d7f1c8e5b9a3d6f2c7e8",
+  "tramos": [
+    { "hasta": 12450, "tipo": 9.5 },
+    { "hasta": 20200, "tipo": 12.0 },
+    { "hasta": 35200, "tipo": 15.0 },
+    { "hasta": 60000, "tipo": 18.5 },
+    { "infinito": true, "tipo": 22.5 }
+  ]
+}

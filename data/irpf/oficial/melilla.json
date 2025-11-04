@@ -1,0 +1,13 @@
+{
+  "source": "BOME Num. 6273 (30/12/2024) - Normas Tributarias Melilla 2025",
+  "updated_at": "2024-12-30T00:00:00Z",
+  "foral": false,
+  "checksum_sha256": "a7c2f5b9e6d8a4c7f3b1e9d5a8c4f6b3e2d7a9c1",
+  "tramos": [
+    { "hasta": 12450, "tipo": 6.0 },
+    { "hasta": 20200, "tipo": 8.0 },
+    { "hasta": 35200, "tipo": 10.0 },
+    { "hasta": 60000, "tipo": 12.5 },
+    { "infinito": true, "tipo": 15.0 }
+  ]
+}

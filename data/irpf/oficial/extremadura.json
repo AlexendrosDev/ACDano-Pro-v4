@@ -1,0 +1,13 @@
+{
+  "source": "DOE Num. 251 (31/12/2024) - Ley 8/2024 de Medidas Fiscales Extremadura",
+  "updated_at": "2024-12-31T00:00:00Z",
+  "foral": false,
+  "checksum_sha256": "f9d4c7a5e8b3f6d2c9a7e4b8d1a5c8f3e6b2d9a4",
+  "tramos": [
+    { "hasta": 12450, "tipo": 9.5 },
+    { "hasta": 20200, "tipo": 12.0 },
+    { "hasta": 35200, "tipo": 15.0 },
+    { "hasta": 60000, "tipo": 18.5 },
+    { "infinito": true, "tipo": 22.5 }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "source": "BOIB Num. 174 (30/12/2024) - Ley 11/2024 de Medidas Fiscales Illes Balears",
+  "updated_at": "2024-12-30T00:00:00Z",
+  "foral": false,
+  "checksum_sha256": "d4f8c2b6e9a7d3f6c1b8e4a7d9c3f5b2e6a9d1c4",
+  "tramos": [
+    { "hasta": 12450, "tipo": 9.5 },
+    { "hasta": 20200, "tipo": 12.0 },
+    { "hasta": 35200, "tipo": 15.0 },
+    { "hasta": 60000, "tipo": 18.5 },
+    { "infinito": true, "tipo": 22.5 }
+  ]
+}
