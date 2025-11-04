@@ -7,10 +7,26 @@ import { LIMITES } from './shared/constants.js';
 import SectorManager from './core/SectorManager.js';
 import registerHosteleria from './sectors/hosteleria/HosteleriaPlugin.js';
 import registerLimpieza from './sectors/limpieza/LimpiezaPlugin.js';
+import RegionManager from './core/RegionManager.js';
+import IRPFMadrid2025 from './regions/madrid/IRPFMadrid2025.js';
 
-// Registrar sectores disponibles
+// Registrar sectores y regiones disponibles
 registerHosteleria();
 registerLimpieza();
+RegionManager.registerRegion('madrid', { name: 'Comunidad de Madrid', irpf: IRPFMadrid2025 });
+
+function crearSelectorRegion() {
+  const regiones = RegionManager.listRegions();
+  const options = regiones.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+  return `
+    <div class="form-group">
+      <label class="form-label" for="region">Región</label>
+      <select id="region" class="form-control">
+        ${options}
+      </select>
+    </div>
+  `;
+}
 
 function crearSelectorSector() {
   const sectores = SectorManager.listSectors();
@@ -27,6 +43,7 @@ function crearSelectorSector() {
 
 function crearFormularioHTML() {
   return `
+    ${crearSelectorRegion()}
     ${crearSelectorSector()}
 
     <div class="form-group">
@@ -54,9 +71,7 @@ function crearFormularioHTML() {
 
     <div class="form-group">
       <label class="form-label">Complementos Aplicables</label>
-      <div class="checkbox-group" id="complementos_container">
-        <!-- Cargado dinámicamente según sector -->
-      </div>
+      <div class="checkbox-group" id="complementos_container"></div>
     </div>
 
     <div class="form-group">
@@ -97,6 +112,7 @@ class App {
     this.validaciones = new ValidacionesPanel();
     this.meter = new ExpolioMeter();
     this.sectorActual = null;
+    this.regionActual = null;
   }
 
   init() {
@@ -107,6 +123,12 @@ class App {
     this.formulario.elementos.horasNocturnas = document.getElementById('horas_nocturnas');
     this.formulario.elementos.festivosTrabajados = document.getElementById('festivos_trabajados');
 
+    // Selector de región
+    const regionSelect = document.getElementById('region');
+    regionSelect.addEventListener('change', () => {
+      this.regionActual = regionSelect.value;
+    });
+
     // Selector de sector
     const sectorSelect = document.getElementById('sector');
     sectorSelect.addEventListener('change', () => {
@@ -114,14 +136,17 @@ class App {
       this._cargarCategoriasParaSector(sectorSelect.value);
       this._cargarComplementosParaSector(sectorSelect.value);
     });
-    
-    // Cargar primer sector por defecto
+
+    // Inicializar selecciones
+    if (regionSelect.options.length > 0) {
+      this.regionActual = regionSelect.value = regionSelect.options[0].value;
+    }
     if (sectorSelect.options.length > 0) {
       this.sectorActual = sectorSelect.value = sectorSelect.options[0].value;
       this._cargarCategoriasParaSector(this.sectorActual);
       this._cargarComplementosParaSector(this.sectorActual);
     }
-    
+
     this.resultados.inicializar?.();
     this.validaciones.inicializar?.();
     this.meter.inicializar?.();
@@ -215,6 +240,7 @@ class App {
       
       if (!datosTrabajador) return;
 
+      // Nota: Región aplicada a IRPF estará soportada cuando se integre RegionManager en IRPFCalculator
       const { resultados, validacion } = this.nominaCalculator.calcularNominaCompleta(datosTrabajador, datosFamiliares, opcionesSector);
 
       this.resultados.mostrarResultados(resultados, validacion);
