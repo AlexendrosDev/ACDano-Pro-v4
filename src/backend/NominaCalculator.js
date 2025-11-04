@@ -9,7 +9,7 @@ import CalculationAuditor from './validators/CalculationAuditor.js';
 import AuditLogger from '../shared/AuditLogger.js';
 import ConvenioValencia from './models/ConvenioValencia.js';
 import SeguridadSocial2025 from './models/SeguridadSocial2025.js';
-import IRPFValencia2025 from './models/IRPFValencia2025.js';
+import IRPFValencia2025 from '../regions/valencia/IRPFValencia2025.js';
 import { round2 } from '../shared/utils.js';
 import RateLimiter from '../shared/RateLimiter.js';
 import SecurityValidator from '../shared/SecurityValidator.js';
@@ -81,7 +81,13 @@ export class NominaCalculator {
     // IRPF: regional o fallback Valencia
     const irpfModel = region?.irpf || IRPFValencia2025;
 
-    AuditLogger.log('calculo:start', { datosTrabajador: dtSan, datosFamiliares: dfSan, regionId, convenio: convenio.constructor.name });
+    AuditLogger.log('calculo:start', { 
+      datosTrabajador: dtSan, 
+      datosFamiliares: dfSan, 
+      regionId, 
+      convenio: convenio.constructor.name,
+      irpfModel: irpfModel.constructor.name
+    });
 
     // Usar convenio seleccionado para cálculos base
     const conceptosSalariales = this.baseCalculator.calcularConceptosSalariales(dtSan, convenio);
@@ -200,7 +206,10 @@ export class NominaCalculator {
       validacion.warnings.push({ codigo: 'AUDIT_IRPF_TRAMOS', mensaje: 'Diferencias en auditoría de tramos IRPF' });
     }
 
-    AuditLogger.log('calculo:end', { resultados, validacion, auditoria, auditIRPF, regionId, convenio: convenio.constructor.name });
+    AuditLogger.log('calculo:end', { 
+      resultados, validacion, auditoria, auditIRPF, 
+      regionId, convenio: convenio.constructor.name 
+    });
 
     if (STRICT_MODE) {
       const codigosCriticos = new Set(['AUDIT_IRPF_TRAMOS', 'AUDIT_COSTE_EMPRESA', 'AUDIT_EXPOLIO', 'SECTOR_EXPOLIO_FUERA_RANGO']);
