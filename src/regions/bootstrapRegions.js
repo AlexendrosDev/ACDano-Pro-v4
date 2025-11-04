@@ -16,6 +16,8 @@ import IRPFCanarias2025 from '../regions/canarias/IRPFCanarias2025.js';
 import IRPFCLM2025 from '../regions/castilla_la_mancha/IRPFCLM2025.js';
 import IRPFExtremadura2025 from '../regions/extremadura/IRPFExtremadura2025.js';
 import IRPFLaRioja2025 from '../regions/la_rioja/IRPFLaRioja2025.js';
+import IRPFCeuta2025 from '../regions/ceuta/IRPFCeuta2025.js';
+import IRPFMelilla2025 from '../regions/melilla/IRPFMelilla2025.js';
 
 export function registerInitialRegions() {
   RegionManager.registerRegion('valencia', { name: 'Comunitat Valenciana', irpf: IRPFValencia2025 });
@@ -35,6 +37,8 @@ export function registerInitialRegions() {
   RegionManager.registerRegion('castilla_la_mancha', { name: 'Castilla-La Mancha', irpf: IRPFCLM2025 });
   RegionManager.registerRegion('extremadura', { name: 'Extremadura', irpf: IRPFExtremadura2025 });
   RegionManager.registerRegion('la_rioja', { name: 'La Rioja', irpf: IRPFLaRioja2025 });
+  RegionManager.registerRegion('ceuta', { name: 'Ceuta', irpf: IRPFCeuta2025 });
+  RegionManager.registerRegion('melilla', { name: 'Melilla', irpf: IRPFMelilla2025 });
 }
 
 export default registerInitialRegions;
