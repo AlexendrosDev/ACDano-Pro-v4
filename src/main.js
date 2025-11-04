@@ -5,22 +5,26 @@ import ValidacionesPanel from './frontend/components/ValidacionesPanel.js';
 import ExpolioMeter from './frontend/components/ExpolioMeter.js';
 import { LIMITES } from './shared/constants.js';
 import SectorManager from './core/SectorManager.js';
+import RegionManager from './core/RegionManager.js';
 import registerHosteleria from './sectors/hosteleria/HosteleriaPlugin.js';
 import registerLimpieza from './sectors/limpieza/LimpiezaPlugin.js';
-import RegionManager from './core/RegionManager.js';
 import IRPFMadrid2025 from './regions/madrid/IRPFMadrid2025.js';
+import IRPFCataluna2025 from './regions/cataluna/IRPFCataluna2025.js';
+import IRPFAndalucia2025 from './regions/andalucia/IRPFAndalucia2025.js';
 
 // Registrar sectores y regiones disponibles
 registerHosteleria();
 registerLimpieza();
 RegionManager.registerRegion('madrid', { name: 'Comunidad de Madrid', irpf: IRPFMadrid2025 });
+RegionManager.registerRegion('cataluna', { name: 'Cataluña', irpf: IRPFCataluna2025 });
+RegionManager.registerRegion('andalucia', { name: 'Andalucía', irpf: IRPFAndalucia2025 });
 
 function crearSelectorRegion() {
   const regiones = RegionManager.listRegions();
   const options = regiones.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
   return `
     <div class="form-group">
-      <label class="form-label" for="region">Región</label>
+      <label class="form-label" for="region">Región / Comunidad Autónoma</label>
       <select id="region" class="form-control">
         ${options}
       </select>
@@ -85,17 +89,14 @@ function crearFormularioHTML() {
         <div class="form-group">
           <label class="form-label" for="horas_extra">Horas Extra Mes (opcional)</label>
           <input type="number" id="horas_extra" class="form-control" min="0" max="200" value="0" placeholder="0" />
-          <small style="color: var(--color-text-secondary); font-size: var(--font-size-xs);">Para validaciones sectoriales</small>
         </div>
         <div class="form-group">
           <label class="form-label" for="horas_nocturnas">Horas Nocturnas Mes (opcional)</label>
           <input type="number" id="horas_nocturnas" class="form-control" min="0" max="200" value="0" placeholder="0" />
-          <small style="color: var(--color-text-secondary); font-size: var(--font-size-xs);">22:00 - 06:00</small>
         </div>
         <div class="form-group">
           <label class="form-label" for="festivos_trabajados">Festivos Trabajados Mes (opcional)</label>
           <input type="number" id="festivos_trabajados" class="form-control" min="0" max="10" value="0" placeholder="0" />
-          <small style="color: var(--color-text-secondary); font-size: var(--font-size-xs);">Domingos y festivos oficiales</small>
         </div>
       </div>
     </details>
@@ -123,13 +124,12 @@ class App {
     this.formulario.elementos.horasNocturnas = document.getElementById('horas_nocturnas');
     this.formulario.elementos.festivosTrabajados = document.getElementById('festivos_trabajados');
 
-    // Selector de región
     const regionSelect = document.getElementById('region');
     regionSelect.addEventListener('change', () => {
       this.regionActual = regionSelect.value;
+      this._mostrarInfoRegion(this.regionActual);
     });
 
-    // Selector de sector
     const sectorSelect = document.getElementById('sector');
     sectorSelect.addEventListener('change', () => {
       this.sectorActual = sectorSelect.value;
@@ -140,6 +140,7 @@ class App {
     // Inicializar selecciones
     if (regionSelect.options.length > 0) {
       this.regionActual = regionSelect.value = regionSelect.options[0].value;
+      this._mostrarInfoRegion(this.regionActual);
     }
     if (sectorSelect.options.length > 0) {
       this.sectorActual = sectorSelect.value = sectorSelect.options[0].value;
@@ -155,6 +156,13 @@ class App {
     Object.values(this.formulario.elementos).forEach(el => el && el.addEventListener('change', () => {
       if (this.formulario.elementos.categoria?.value) this.calcular();
     }));
+  }
+
+  _mostrarInfoRegion(regionId) {
+    const region = RegionManager.getRegion(regionId);
+    if (region) {
+      console.log(`🗺️ Región seleccionada: ${region.name}`);
+    }
   }
 
   _cargarCategoriasParaSector(sectorId) {
@@ -218,7 +226,6 @@ class App {
       `;
     }
 
-    // Re-asignar referencias tras regenerar HTML
     this._reasignarElementosFormulario();
   }
 
@@ -240,8 +247,13 @@ class App {
       
       if (!datosTrabajador) return;
 
-      // Nota: Región aplicada a IRPF estará soportada cuando se integre RegionManager en IRPFCalculator
-      const { resultados, validacion } = this.nominaCalculator.calcularNominaCompleta(datosTrabajador, datosFamiliares, opcionesSector);
+      // Pasar regionId al cálculo
+      const { resultados, validacion } = this.nominaCalculator.calcularNominaCompleta(
+        datosTrabajador, 
+        datosFamiliares, 
+        opcionesSector, 
+        this.regionActual
+      );
 
       this.resultados.mostrarResultados(resultados, validacion);
       this.validaciones.mostrarValidaciones(resultados, validacion);
@@ -249,6 +261,9 @@ class App {
 
       document.getElementById('expolio_section').classList.add('visible');
       document.getElementById('validaciones_section').classList.add('visible');
+      
+      // Mostrar qué región y convenio se aplicaron
+      console.log(`⚙️ Calculado con: ${resultados.region_aplicada} + ${resultados.convenio_aplicado}`);
     } catch (e) {
       document.getElementById('resultados_content').innerHTML = `<div style="color: var(--color-error); text-align:center; padding: 12px;">${e.message}</div>`;
       document.getElementById('expolio_section').classList.remove('visible');
