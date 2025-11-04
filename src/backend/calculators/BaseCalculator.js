@@ -15,9 +15,10 @@ export class BaseCalculator {
     /**
      * Calcula conceptos salariales (que COTIZAN a la Seguridad Social)
      * @param {Object} datosTrabajador - Datos del trabajador
+     * @param {Object} convenio - Convenio a aplicar (opcional, fallback ConvenioValencia)
      * @returns {Object} Conceptos salariales detallados
      */
-    calcularConceptosSalariales(datosTrabajador) {
+    calcularConceptosSalariales(datosTrabajador, convenio = ConvenioValencia) {
         const conceptosSalariales = {
             salario_base: 0,
             prorrata_pagas: 0,
@@ -27,26 +28,31 @@ export class BaseCalculator {
         };
 
         // PASO 1: Salario base según convenio
-        conceptosSalariales.salario_base = ConvenioValencia.obtenerSalarioBase(
+        conceptosSalariales.salario_base = convenio.obtenerSalarioBase(
             datosTrabajador.tabla, 
             datosTrabajador.nivel
         );
 
-        // PASO 2: Prorrata pagas extraordinarias (3 pagas anuales / 12 meses)
-        conceptosSalariales.prorrata_pagas = 
-            conceptosSalariales.salario_base * ConvenioValencia.NUM_PAGAS_EXTRAORDINARIAS / 12;
+        // PASO 2: Prorrata pagas extraordinarias
+        const numPagas = convenio.NUM_PAGAS_EXTRAORDINARIAS || ConvenioValencia.NUM_PAGAS_EXTRAORDINARIAS;
+        conceptosSalariales.prorrata_pagas = conceptosSalariales.salario_base * numPagas / 12;
 
         // PASO 3: Plus formación (SALARIAL - cotiza)
         if (datosTrabajador.aplica_plus_formacion) {
-            conceptosSalariales.plus_formacion = ConvenioValencia.COMPLEMENTOS.PLUS_FORMACION;
+            conceptosSalariales.plus_formacion = convenio.COMPLEMENTOS?.PLUS_FORMACION || ConvenioValencia.COMPLEMENTOS.PLUS_FORMACION;
         }
 
         // PASO 4: Manutención (SALARIAL - cotiza)
         if (datosTrabajador.aplica_manutencion) {
-            if (datosTrabajador.es_hotel) {
-                conceptosSalariales.manutencion = ConvenioValencia.COMPLEMENTOS.ANEXO_IV_2.manutencion;
+            if (convenio.COMPLEMENTOS?.MANUTENCION) {
+                // Sector Limpieza u otros con manutención simple
+                conceptosSalariales.manutencion = convenio.COMPLEMENTOS.MANUTENCION;
             } else {
-                conceptosSalariales.manutencion = ConvenioValencia.COMPLEMENTOS.ANEXO_IV_1.manutencion;
+                // Sector Hostelería con anexos
+                const anexo = datosTrabajador.es_hotel ? 
+                    ConvenioValencia.COMPLEMENTOS.ANEXO_IV_2 : 
+                    ConvenioValencia.COMPLEMENTOS.ANEXO_IV_1;
+                conceptosSalariales.manutencion = anexo.manutencion;
             }
         }
 
@@ -59,9 +65,10 @@ export class BaseCalculator {
     /**
      * Calcula conceptos no salariales (que NO COTIZAN pero SÍ TRIBUTAN)
      * @param {Object} datosTrabajador - Datos del trabajador
+     * @param {Object} convenio - Convenio a aplicar (opcional, fallback ConvenioValencia)
      * @returns {Object} Conceptos no salariales detallados
      */
-    calcularConceptosNoSalariales(datosTrabajador) {
+    calcularConceptosNoSalariales(datosTrabajador, convenio = ConvenioValencia) {
         const conceptosNoSalariales = {
             plus_transporte: 0,
             vestuario: 0,
@@ -71,21 +78,45 @@ export class BaseCalculator {
 
         // PASO 1: Plus transporte (NO SALARIAL - no cotiza, sí tributa IRPF)
         if (datosTrabajador.aplica_plus_transporte) {
-            const anexo = datosTrabajador.es_hotel ? 
-                ConvenioValencia.COMPLEMENTOS.ANEXO_IV_2 : 
-                ConvenioValencia.COMPLEMENTOS.ANEXO_IV_1;
-            
-            if (datosTrabajador.tipo_jornada === "partida") {
-                conceptosNoSalariales.plus_transporte = anexo.plus_transporte_partida;
+            if (convenio.COMPLEMENTOS?.PLUS_TRANSPORTE) {
+                // Sector con plus transporte simple o urbano/interurbano
+                const plusTransporte = convenio.COMPLEMENTOS.PLUS_TRANSPORTE;
+                if (typeof plusTransporte === 'object' && plusTransporte.URBANO) {
+                    conceptosNoSalariales.plus_transporte = datosTrabajador.transporte_urbano ? 
+                        plusTransporte.URBANO : plusTransporte.INTERURBANO;
+                } else {
+                    conceptosNoSalariales.plus_transporte = plusTransporte;
+                }
             } else {
-                conceptosNoSalariales.plus_transporte = anexo.plus_transporte_continuada;
+                // Fallback hostelería Valencia con anexos
+                const anexo = datosTrabajador.es_hotel ? 
+                    ConvenioValencia.COMPLEMENTOS.ANEXO_IV_2 : 
+                    ConvenioValencia.COMPLEMENTOS.ANEXO_IV_1;
+                
+                conceptosNoSalariales.plus_transporte = datosTrabajador.tipo_jornada === "partida" ?
+                    anexo.plus_transporte_partida : anexo.plus_transporte_continuada;
             }
         }
 
-        // PASO 2: Vestuario (NO SALARIAL)
-        if (datosTrabajador.aplica_vestuario) {
-            const categoria = datosTrabajador.categoria.includes('cocinero') ? 'cocineros' : 'camareros';
-            conceptosNoSalariales.vestuario = ConvenioValencia.COMPLEMENTOS.VESTUARIO[categoria].total;
+        // PASO 2: Vestuario/EPI (NO SALARIAL)
+        if (datosTrabajador.aplica_vestuario || datosTrabajador.elementos_uniforme) {
+            if (convenio.COMPLEMENTOS?.EPI?.ELEMENTOS) {
+                // Sector Limpieza con EPI por elementos
+                const elementos = datosTrabajador.elementos_epi || datosTrabajador.elementos_uniforme || [];
+                conceptosNoSalariales.vestuario = elementos.reduce((sum, elemento) => {
+                    return sum + (convenio.COMPLEMENTOS.EPI.ELEMENTOS[elemento]?.precio || 0);
+                }, 0);
+            } else if (convenio.COMPLEMENTOS?.VESTUARIO?.ELEMENTOS) {
+                // Sector Hostelería con vestuario por elementos
+                const elementos = datosTrabajador.elementos_uniforme || [];
+                conceptosNoSalariales.vestuario = elementos.reduce((sum, elemento) => {
+                    return sum + (convenio.COMPLEMENTOS.VESTUARIO.ELEMENTOS[elemento]?.precio || 0);
+                }, 0);
+            } else {
+                // Fallback hostelería Valencia por categoría
+                const categoria = datosTrabajador.categoria.includes('cocinero') ? 'cocineros' : 'camareros';
+                conceptosNoSalariales.vestuario = ConvenioValencia.COMPLEMENTOS.VESTUARIO[categoria].total;
+            }
         }
 
         // PASO 3: Calcular total
@@ -142,16 +173,17 @@ export class BaseCalculator {
     /**
      * Valida que los datos del trabajador sean coherentes
      * @param {Object} datosTrabajador - Datos a validar
+     * @param {Object} convenio - Convenio a usar para validación (opcional)
      * @returns {Object} Resultado de validación
      */
-    validarDatosTrabajador(datosTrabajador) {
+    validarDatosTrabajador(datosTrabajador, convenio = ConvenioValencia) {
         const errores = [];
 
         // Validar tabla y nivel
-        if (!ConvenioValencia.esTablaValida(datosTrabajador.tabla)) {
+        if (!convenio.esTablaValida(datosTrabajador.tabla)) {
             errores.push(`Tabla inválida: ${datosTrabajador.tabla}`);
         }
-        if (!ConvenioValencia.esNivelValido(datosTrabajador.nivel)) {
+        if (!convenio.esNivelValido(datosTrabajador.nivel)) {
             errores.push(`Nivel inválido: ${datosTrabajador.nivel}`);
         }
 
