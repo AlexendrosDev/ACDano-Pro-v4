@@ -14,8 +14,10 @@ import { round2 } from '../shared/utils.js';
 import RateLimiter from '../shared/RateLimiter.js';
 import SecurityValidator from '../shared/SecurityValidator.js';
 import SchemaValidator from './validators/SchemaValidator.js';
+import RegionManager from '../core/RegionManager.js';
+import SectorManager from '../core/SectorManager.js';
 
-const STRICT_MODE = false; // Cambiar a true en entornos de producción estrictos
+const STRICT_MODE = false;
 
 export class NominaCalculator {
   constructor() {
@@ -37,7 +39,6 @@ export class NominaCalculator {
   }
 
   _sanitizarEntradas(datosTrabajador, datosFamiliares) {
-    // Sanitizar selects y strings básicos
     const cat = SecurityValidator.sanitizeInput(datosTrabajador?.categoria, { type: 'select', field: 'categoria' });
     const tabla = SecurityValidator.sanitizeInput(datosTrabajador?.tabla, { type: 'select', field: 'tabla' });
     const jornada = SecurityValidator.sanitizeInput(datosTrabajador?.tipo_jornada, { type: 'select', field: 'tipo_jornada' });
@@ -59,14 +60,10 @@ export class NominaCalculator {
     }, { num_hijos: hijos }];
   }
 
-  async calcularNominaCompleta(datosTrabajador, datosFamiliares, opcionesSector = {}) {
-    // Rate limiting
+  async calcularNominaCompleta(datosTrabajador, datosFamiliares, opcionesSector = {}, regionId = 'valencia') {
     RateLimiter.checkLimit();
-
-    // Sanitización
     const [dtSan, dfSan] = this._sanitizarEntradas(datosTrabajador, datosFamiliares);
 
-    // Validación de esquemas
     const v1 = SchemaValidator.validate('datosTrabajador', dtSan);
     if (!v1.valid) throw new Error(`Datos inválidos: ${v1.errors.join('; ')}`);
     const v2 = SchemaValidator.validate('datosFamiliares', dfSan);
@@ -74,16 +71,29 @@ export class NominaCalculator {
 
     await this._asegurarIntegridadNormativa();
 
-    AuditLogger.log('calculo:start', { datosTrabajador: dtSan, datosFamiliares: dfSan });
+    // Obtener región y sector
+    const region = RegionManager.getRegion(regionId);
+    const sector = SectorManager.getSector(dtSan.sectorId);
+    
+    // Convenio: primero regional, luego sectorial, finalmente fallback
+    const convenio = region?.convenios?.[dtSan.sectorId] || sector?.convenio || ConvenioValencia;
+    
+    // IRPF: regional o fallback Valencia
+    const irpfModel = region?.irpf || IRPFValencia2025;
 
-    const conceptosSalariales = this.baseCalculator.calcularConceptosSalariales(dtSan);
-    const conceptosNoSalariales = this.baseCalculator.calcularConceptosNoSalariales(dtSan);
+    AuditLogger.log('calculo:start', { datosTrabajador: dtSan, datosFamiliares: dfSan, regionId, convenio: convenio.constructor.name });
+
+    // Usar convenio seleccionado para cálculos base
+    const conceptosSalariales = this.baseCalculator.calcularConceptosSalariales(dtSan, convenio);
+    const conceptosNoSalariales = this.baseCalculator.calcularConceptosNoSalariales(dtSan, convenio);
     const salarioBrutoTotal = this.baseCalculator.calcularSalarioBrutoTotal(conceptosSalariales, conceptosNoSalariales);
     const baseCotizacion = this.baseCalculator.calcularBaseCotizacion(conceptosSalariales);
     const baseIRPFAnual = this.baseCalculator.calcularBaseIRPF(salarioBrutoTotal);
     const cotizacionesTrabajador = this.cotizacionCalculator.calcularCotizacionesTrabajador(baseCotizacion);
     const cotizacionesEmpresa = this.cotizacionCalculator.calcularCotizacionesEmpresa(baseCotizacion);
-    const irpf = this.irpfCalculator.calcularIRPFValenciaCompleto(baseIRPFAnual, dfSan);
+    
+    // IRPF regional
+    const irpf = this.irpfCalculator.calcularIRPFRegional(baseIRPFAnual, dfSan, irpfModel);
 
     const totalDeducciones = cotizacionesTrabajador.total + irpf.retencion_mensual;
     const salarioLiquido = salarioBrutoTotal - totalDeducciones;
@@ -121,7 +131,8 @@ export class NominaCalculator {
           base_liquidable: round2(irpf.base_liquidable || 0),
           cuota_anual: round2(irpf.cuota_anual),
           tipo_medio_efectivo: round2(irpf.tipo_medio),
-          retencion_mensual: round2(irpf.retencion_mensual)
+          retencion_mensual: round2(irpf.retencion_mensual),
+          region_aplicada: regionId
         },
         total_deducciones: round2(totalDeducciones)
       },
@@ -150,6 +161,8 @@ export class NominaCalculator {
         expolio_total_estado: round2(expolioTotal),
         porcentaje_expolio: round2(porcentajeExpolio)
       },
+      region_aplicada: regionId,
+      convenio_aplicado: convenio.constructor.name,
       conceptos_salariales: conceptosSalariales,
       conceptos_no_salariales: conceptosNoSalariales,
       salario_bruto_total: salarioBrutoTotal,
@@ -168,25 +181,18 @@ export class NominaCalculator {
       datos_familiares: dfSan,
     };
 
-    // Validación matemática
     const validacion = this.logicValidator.validarCoherenciaMatematica(resultados);
-
-    // Validaciones sectoriales (input)
     const valSector = SectorValidator.validar(resultados, opcionesSector);
     validacion.warnings = [...validacion.warnings, ...valSector.warnings];
-
-    // Coherencia sectorial por categoría/nivel (estadística/esperado)
     const valCoh = SectorCoherenceValidator.validar(resultados);
     validacion.warnings = [...validacion.warnings, ...valCoh.warnings];
     validacion.sectorial = { ...valSector, ...valCoh };
-
-    // Auditoría general (coste/expolio/porcentaje)
+    
     const auditoria = CalculationAuditor.audit(resultados);
     if (auditoria.warnings.length) {
       validacion.warnings = [...validacion.warnings, ...auditoria.warnings];
     }
 
-    // Auditoría IRPF por tramos (independiente)
     const auditIRPF = IRPFTramosAuditor.auditar(baseIRPFAnual, dfSan);
     const difCuota = Math.abs((auditIRPF.cuotas.total || 0) - (irpf.cuota_anual || 0));
     const difMensual = Math.abs((auditIRPF.retencionMensual || 0) - (irpf.retencion_mensual || 0));
@@ -194,15 +200,13 @@ export class NominaCalculator {
       validacion.warnings.push({ codigo: 'AUDIT_IRPF_TRAMOS', mensaje: 'Diferencias en auditoría de tramos IRPF' });
     }
 
-    AuditLogger.log('calculo:end', { resultados, validacion, auditoria, auditIRPF });
+    AuditLogger.log('calculo:end', { resultados, validacion, auditoria, auditIRPF, regionId, convenio: convenio.constructor.name });
 
-    // STRICT MODE: convierte ciertos warnings en error bloqueante
     if (STRICT_MODE) {
       const codigosCriticos = new Set(['AUDIT_IRPF_TRAMOS', 'AUDIT_COSTE_EMPRESA', 'AUDIT_EXPOLIO', 'SECTOR_EXPOLIO_FUERA_RANGO']);
       const tieneCritico = validacion.warnings.some(w => codigosCriticos.has(w.codigo));
       if (tieneCritico || !validacion.es_valido) {
-        const msg = 'STRICT_MODE: divergencias detectadas — cálculo bloqueado';
-        throw new Error(msg);
+        throw new Error('STRICT_MODE: divergencias detectadas — cálculo bloqueado');
       }
     } else if (!validacion.es_valido) {
       const crit = validacion.errores.find(e => e.tipo === 'CRÍTICO');
