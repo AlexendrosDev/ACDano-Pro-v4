@@ -1,7 +1,7 @@
 {
-  "name": "acdano-pro-v4",
+  "name": "laborcompli-v4",
   "version": "4.0.0",
-  "description": "🚀 ACDaño PRO v4.0: Sistema profesional modular de cálculo de nóminas para hostelería Valencia. Arquitectura escalable, tests unitarios, documentación completa y cumplimiento normativo 2025.",
+  "description": "🚀 LaborCompli v4.0: Sistema integral SaaS de nóminas y contratos para pymes españolas. Compliance BOE automático, transparencia fiscal total y cobertura 19 territorios. Arquitectura enterprise con auditoría triple y tests 90%+.",
   "main": "src/main.js",
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:regions": "jest tests/integration/multiRegion.test.js tests/integration/fixturesConsistency.test.js --verbose",
     "test:e2e": "playwright test",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
@@ -21,17 +22,29 @@
     "prepare": "husky install"
   },
   "keywords": [
+    "laborcompli",
     "nominas",
-    "hosteleria",
-    "valencia",
+    "contratos",
+    "compliance",
+    "legislacion-laboral",
+    "boe",
+    "pymes",
+    "saas",
     "irpf",
     "seguridad-social",
-    "calculadora",
+    "multi-region",
     "transparencia-fiscal",
-    "convenio-colectivo",
     "expolio-fiscal",
+    "convenio-colectivo",
+    "hosteleria",
+    "comercio",
+    "construccion",
+    "valencia",
+    "madrid",
+    "cataluna",
+    "andalucia",
     "spain",
-    "acdano"
+    "enterprise"
   ],
   "author": {
     "name": "AlexendrosDev",
