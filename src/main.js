@@ -9,11 +9,36 @@ import RegionManager from './core/RegionManager.js';
 import registerHosteleria from './sectors/hosteleria/HosteleriaPlugin.js';
 import registerLimpieza from './sectors/limpieza/LimpiezaPlugin.js';
 import registerInitialRegions from './regions/bootstrapRegions.js';
+import RegionCoherenceValidator from './backend/validators/RegionCoherenceValidator.js';
 
 // Registrar sectores y regiones
 registerHosteleria();
 registerLimpieza();
 registerInitialRegions();
+
+// Validación de coherencia regional (sin CI): log + aviso UI
+(() => {
+  try {
+    const { okGlobal, resultados } = RegionCoherenceValidator.validarTodas(RegionManager);
+    if (!okGlobal) {
+      const errores = resultados.filter(r => !r.ok).flatMap(r => r.errores.map(e => `[${r.regionId}] ${e}`));
+      console.error('❌ Incoherencias de regiones detectadas:', errores);
+      // Aviso no bloqueante en la UI
+      const banner = document.createElement('div');
+      banner.setAttribute('role', 'alert');
+      banner.style.cssText = 'background: rgba(192,21,47,0.1); color: var(--color-error); padding: 8px 12px; border:1px solid rgba(192,21,47,0.25); border-radius:8px; margin: 12px 0;';
+      banner.textContent = `Advertencia: incoherencias de regiones detectadas (${errores.length}). Revisa la consola para detalle.`;
+      document.addEventListener('DOMContentLoaded', () => {
+        const root = document.getElementById('form_root');
+        if (root && root.parentElement) root.parentElement.insertBefore(banner, root);
+      });
+    } else {
+      console.info('✅ Coherencia regional verificada (todas las regiones OK)');
+    }
+  } catch (err) {
+    console.error('Error al validar coherencia regional:', err);
+  }
+})();
 
 function crearSelectorRegion() {
   const regiones = RegionManager.listRegions();
@@ -258,7 +283,7 @@ class App {
       
       console.log(`⚙️ Calculado con: ${resultados.region_aplicada} + ${resultados.convenio_aplicado}`);
     } catch (e) {
-      document.getElementById('resultados_content').innerHTML = `<div style="color: var(--color-error); text-align:center; padding: 12px;">${e.message}</div>`;
+      document.getElementById('resultados_content').innerHTML = `<div style=\"color: var(--color-error); text-align:center; padding: 12px;\">${e.message}</div>`;
       document.getElementById('expolio_section').classList.remove('visible');
       document.getElementById('validaciones_section').classList.remove('visible');
     }
