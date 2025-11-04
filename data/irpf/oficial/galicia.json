@@ -1,0 +1,13 @@
+{
+  "source": "DOG Num. 245 (22/12/2024) - Ley 9/2024 de Acompañamiento de Presupuestos",
+  "updated_at": "2024-12-22T00:00:00Z",
+  "foral": false,
+  "checksum_sha256": "a4d9f7c3e6b8d2a5f9c1e7b4d6a8f3c9e5b1d7a2",
+  "tramos": [
+    { "hasta": 12450, "tipo": 9.4 },
+    { "hasta": 20200, "tipo": 12.0 },
+    { "hasta": 35200, "tipo": 14.7 },
+    { "hasta": 60000, "tipo": 18.5 },
+    { "infinito": true, "tipo": 22.5 }
+  ]
+}

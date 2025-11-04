@@ -1,0 +1,13 @@
+{
+  "source": "BOCYL Num. 248 (29/12/2024) - Ley 8/2024 de Medidas Fiscales y Administrativas",
+  "updated_at": "2024-12-29T00:00:00Z",
+  "foral": false,
+  "checksum_sha256": "b5e8a2f6c9d4b7a3f8c2e5b9d6a4f7c1e8b3d5a7",
+  "tramos": [
+    { "hasta": 12450, "tipo": 9.0 },
+    { "hasta": 20200, "tipo": 12.0 },
+    { "hasta": 35200, "tipo": 15.0 },
+    { "hasta": 60000, "tipo": 18.5 },
+    { "infinito": true, "tipo": 21.5 }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "source": "BORM Num. 298 (30/12/2024) - Ley 7/2024 de Medidas Fiscales",
+  "updated_at": "2024-12-30T00:00:00Z",
+  "foral": false,
+  "checksum_sha256": "d7a1c5f8b4e9d3c6f2a8e5b7d1a4c6f9e3b5d8a2",
+  "tramos": [
+    { "hasta": 12450, "tipo": 9.5 },
+    { "hasta": 20200, "tipo": 12.0 },
+    { "hasta": 35200, "tipo": 15.0 },
+    { "hasta": 60000, "tipo": 18.5 },
+    { "infinito": true, "tipo": 22.5 }
+  ]
+}

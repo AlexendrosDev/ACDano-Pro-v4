@@ -1,0 +1,14 @@
+{
+  "source": "BOCM Num. 259 (30/10/2025) - Ley 9/2025 de Medidas Fiscales y Administrativas",
+  "updated_at": "2025-10-30T00:00:00Z",
+  "foral": false,
+  "checksum_sha256": "a7f3c2e8b1d5a9f2c4e6b8d0a3c5e7f9b1d3c5e7",
+  "tramos": [
+    { "hasta": 13362, "tipo": 8.5 },
+    { "hasta": 18004, "tipo": 10.7 },
+    { "hasta": 20200, "tipo": 12.8 },
+    { "hasta": 35425, "tipo": 15.8 },
+    { "hasta": 57320, "tipo": 17.4 },
+    { "infinito": true, "tipo": 20.5 }
+  ]
+}
