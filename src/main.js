@@ -6,6 +6,7 @@ import ExpolioMeter from './frontend/components/ExpolioMeter.js';
 import { LIMITES } from './shared/constants.js';
 import SectorManager from './core/SectorManager.js';
 import RegionManager from './core/RegionManager.js';
+import PreferenceManager from './shared/PreferenceManager.js';
 import registerHosteleria from './sectors/hosteleria/HosteleriaPlugin.js';
 import registerLimpieza from './sectors/limpieza/LimpiezaPlugin.js';
 import registerInitialRegions from './regions/bootstrapRegions.js';
@@ -193,27 +194,39 @@ class App {
     this.formulario.elementos.festivosTrabajados = document.getElementById('festivos_trabajados');
 
     const regionSelect = document.getElementById('region');
+    const sectorSelect = document.getElementById('sector');
+
+    // Cargar preferencias guardadas
+    this._cargarPreferencias();
+
     regionSelect.addEventListener('change', () => {
       this.regionActual = regionSelect.value;
       this._mostrarInfoRegion(this.regionActual);
+      this._guardarPreferencias();
     });
 
-    const sectorSelect = document.getElementById('sector');
     sectorSelect.addEventListener('change', () => {
       this.sectorActual = sectorSelect.value;
       this._cargarCategoriasParaSector(sectorSelect.value);
       this._cargarComplementosParaSector(sectorSelect.value);
+      this._guardarPreferencias();
     });
 
-    if (regionSelect.options.length > 0) {
+    // Valores por defecto si no hay preferencias guardadas
+    if (!this.regionActual && regionSelect.options.length > 0) {
       this.regionActual = regionSelect.value = regionSelect.options[0].value;
       this._mostrarInfoRegion(this.regionActual);
     }
-    if (sectorSelect.options.length > 0) {
+    if (!this.sectorActual && sectorSelect.options.length > 0) {
       this.sectorActual = sectorSelect.value = sectorSelect.options[0].value;
       this._cargarCategoriasParaSector(this.sectorActual);
       this._cargarComplementosParaSector(this.sectorActual);
     }
+
+    // Listener para eventos de preferencias
+    window.addEventListener('preferencesSaved', (event) => {
+      console.log('✅ Preferencias guardadas automáticamente:', event.detail);
+    });
 
     this.resultados.inicializar?.();
     this.validaciones.inicializar?.();
@@ -223,6 +236,57 @@ class App {
     Object.values(this.formulario.elementos).forEach(el => el && el.addEventListener('change', () => {
       if (this.formulario.elementos.categoria?.value) this.calcular();
     }));
+  }
+
+  /**
+   * Carga las preferencias guardadas y las aplica a los selectores
+   */
+  _cargarPreferencias() {
+    if (!PreferenceManager.isAvailable()) {
+      console.warn('⚠️ LocalStorage no disponible, modo sin persistencia');
+      return;
+    }
+
+    const preferences = PreferenceManager.load();
+    const regionSelect = document.getElementById('region');
+    const sectorSelect = document.getElementById('sector');
+
+    // Aplicar región guardada si existe y es válida
+    if (preferences.region) {
+      const regionOption = Array.from(regionSelect.options).find(opt => opt.value === preferences.region);
+      if (regionOption) {
+        regionSelect.value = preferences.region;
+        this.regionActual = preferences.region;
+        this._mostrarInfoRegion(this.regionActual);
+        console.log('📍 Región restaurada desde preferencias:', preferences.region);
+      }
+    }
+
+    // Aplicar sector guardado si existe y es válido
+    if (preferences.sector) {
+      const sectorOption = Array.from(sectorSelect.options).find(opt => opt.value === preferences.sector);
+      if (sectorOption) {
+        sectorSelect.value = preferences.sector;
+        this.sectorActual = preferences.sector;
+        this._cargarCategoriasParaSector(this.sectorActual);
+        this._cargarComplementosParaSector(this.sectorActual);
+        console.log('🏭 Sector restaurado desde preferencias:', preferences.sector);
+      }
+    }
+  }
+
+  /**
+   * Guarda las preferencias actuales
+   */
+  _guardarPreferencias() {
+    if (!PreferenceManager.isAvailable()) return;
+
+    if (this.regionActual && this.sectorActual) {
+      PreferenceManager.save({
+        region: this.regionActual,
+        sector: this.sectorActual
+      });
+    }
   }
 
   _mostrarInfoRegion(regionId) {
@@ -330,7 +394,7 @@ class App {
       
       console.log(`⚙️ Calculado con: ${resultados.region_aplicada} + ${resultados.convenio_aplicado}`);
     } catch (e) {
-      document.getElementById('resultados_content').innerHTML = `<div style=\\\"color: var(--color-error); text-align:center; padding: 12px;\\\">${e.message}</div>`;
+      document.getElementById('resultados_content').innerHTML = `<div style=\"color: var(--color-error); text-align:center; padding: 12px;\">${e.message}</div>`;
       document.getElementById('expolio_section').classList.remove('visible');
       document.getElementById('validaciones_section').classList.remove('visible');
     }
